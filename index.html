@@ -229,3 +229,279 @@ document.getElementById('registroBox').style.display="none";
 </div>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SAFRI PRO 🔥</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+
+</head>
+
+<body>
+
+<!-- SPLASH -->
+<div id="splash" class="splash">
+  <div class="splashContent">
+    <img src="logo.png" class="logoBig">
+    <h1>SAFRI</h1>
+    <p>Cargando...</p>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="welcome" id="loginBox" style="display:none;">
+<input id="email" placeholder="Correo">
+<input id="password" type="password" placeholder="Contraseña">
+<button onclick="login()">Entrar</button>
+<button onclick="mostrarRegistro()">Crear cuenta</button>
+</div>
+
+<!-- REGISTRO -->
+<div id="registroBox" style="display:none;">
+<input id="nombre" placeholder="Nombre">
+<input id="emailR" placeholder="Correo">
+<input id="passR" type="password">
+<select id="tipoUser">
+<option value="vendedor">Vendedor</option>
+<option value="admin">Socio</option>
+</select>
+<button onclick="registrar()">Crear</button>
+<button onclick="volverLogin()">Volver</button>
+</div>
+
+<!-- MENU -->
+<div id="menu" class="simpleMenu" style="display:none">
+
+<button class="bigBtn" id="btnScan" onclick="ver('scan')">📸 Escanear</button>
+
+<button class="bigBtn" onclick="ver('stats')">💰 Ganancias</button>
+
+<button class="bigBtn" id="btnPanel" onclick="ver('panel')">👥 Vendedores</button>
+
+<button class="logoutBtn" onclick="logout()">Salir</button>
+
+</div>
+
+<!-- SCAN -->
+<div id="scan" style="display:none">
+<input type="file" id="img">
+<select id="vendedorSelect"></select>
+<select id="precio">
+<option value="10">$10</option>
+<option value="25">$25</option>
+</select>
+<button onclick="scan()">Escanear</button>
+<textarea id="pins"></textarea>
+<button onclick="guardar()">Guardar</button>
+</div>
+
+<!-- STATS -->
+<div id="stats" style="display:none">
+<h2>Mis ganancias</h2>
+<pre id="statsContent"></pre>
+</div>
+
+<!-- PANEL SOCIO -->
+<div id="panel" style="display:none">
+<h2>Panel de vendedores</h2>
+<ul id="listaVendedores"></ul>
+
+<h2>Ranking</h2>
+<ol id="ranking"></ol>
+</div>
+
+<script>
+
+// VOZ
+function hablar(t){
+speechSynthesis.speak(new SpeechSynthesisUtterance(t));
+}
+
+// SPLASH
+window.onload = ()=>{
+setTimeout(()=>{
+document.getElementById("splash").style.display="none";
+document.getElementById("loginBox").style.display="block";
+},2000);
+}
+
+// FIREBASE
+firebase.initializeApp({
+ apiKey:"AIzaSyBAx5v07KT6gNgK1k04VEPGiJ_hsoIcX2w",
+ authDomain:"safriapp-2f1db.firebaseapp.com",
+ projectId:"safriapp-2f1db"
+});
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let nombre="";
+let tipo="";
+
+// LOGIN
+function login(){
+auth.signInWithEmailAndPassword(
+ email.value,password.value
+).then(res=>cargar(res.user.uid));
+}
+
+// REGISTRO
+function registrar(){
+auth.createUserWithEmailAndPassword(emailR.value,passR.value)
+.then(res=>{
+ db.collection("usuarios").doc(res.user.uid).set({
+  nombre:nombre.value,
+  tipo:tipoUser.value
+ });
+ alert("Creado");
+ volverLogin();
+});
+}
+
+// CARGAR USUARIO
+function cargar(uid){
+db.collection("usuarios").doc(uid).get().then(doc=>{
+ let d=doc.data();
+ nombre=d.nombre;
+ tipo=d.tipo;
+
+ loginBox.style.display="none";
+ menu.style.display="flex";
+
+ hablar("Bienvenido " + nombre);
+
+ if(tipo==="vendedor"){
+  btnScan.style.display="none";
+  btnPanel.style.display="none";
+ }
+
+ cargarVendedores();
+ ver("stats");
+});
+}
+
+// NAVEGAR
+function ver(v){
+["scan","stats","panel"].forEach(x=>{
+ document.getElementById(x).style.display="none";
+});
+document.getElementById(v).style.display="block";
+
+if(v==="stats") stats();
+if(v==="panel") panel();
+}
+
+// VENDEDORES SELECT
+function cargarVendedores(){
+db.collection("usuarios").where("tipo","==","vendedor")
+.get().then(snap=>{
+vendedorSelect.innerHTML="";
+snap.forEach(doc=>{
+ let op=document.createElement("option");
+ op.text=doc.data().nombre;
+ vendedorSelect.add(op);
+});
+});
+}
+
+// OCR
+function scan(){
+let f=img.files[0];
+Tesseract.recognize(f,'eng').then(r=>{
+pins.value=r.data.text;
+});
+}
+
+// GUARDAR
+function guardar(){
+let arr=pins.value.split("\n");
+arr.forEach(p=>{
+ if(p.trim()!=""){
+  db.collection("fichas").add({
+   pin:p,
+   vendedor:vendedorSelect.value,
+   precio:parseInt(precio.value)
+  });
+ }
+});
+alert("Guardado");
+}
+
+// STATS
+function stats(){
+db.collection("fichas").get().then(snap=>{
+ let total=0;
+ snap.forEach(doc=>{
+  let v=doc.data();
+  if(v.vendedor===nombre){
+   total+=v.precio;
+  }
+ });
+
+ statsContent.textContent=
+ "Total: $" + total +
+ "\n15%: $" + (total*0.15).toFixed(2);
+});
+}
+
+// PANEL SOCIO
+function panel(){
+db.collection("fichas").get().then(snap=>{
+
+ let ventas={};
+
+ snap.forEach(doc=>{
+  let v=doc.data();
+  ventas[v.vendedor]=(ventas[v.vendedor]||0)+v.precio;
+ });
+
+ // LISTA
+ listaVendedores.innerHTML="";
+ for(let v in ventas){
+  let li=document.createElement("li");
+  li.textContent=v + " - $" + ventas[v];
+  listaVendedores.appendChild(li);
+ }
+
+ // RANKING
+ let orden=Object.entries(ventas).sort((a,b)=>b[1]-a[1]);
+
+ ranking.innerHTML="";
+ orden.forEach(r=>{
+  let li=document.createElement("li");
+  li.textContent=r[0]+" - $"+r[1];
+  ranking.appendChild(li);
+ });
+
+});
+}
+
+// LOGOUT
+function logout(){
+auth.signOut();
+location.reload();
+}
+
+// UI
+function mostrarRegistro(){
+loginBox.style.display="none";
+registroBox.style.display="block";
+}
+function volverLogin(){
+loginBox.style.display="block";
+registroBox.style.display="none";
+}
+
+</script>
+
+</body>
+</html>
