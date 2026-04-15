@@ -24,13 +24,12 @@
   <p>Cargando...</p>
 </div>
 
-<!-- LOGIN / REGISTER -->
+<!-- LOGIN -->
 <div class="welcome">
 
-  <img src="logo.png" class="logoLogin">
-
-  <!-- LOGIN -->
   <div id="loginBox" class="card">
+
+    <img src="logo.png" class="logoLogin">
 
     <h2>Iniciar sesión</h2>
 
@@ -44,6 +43,8 @@
 
   <!-- REGISTRO -->
   <div id="registroBox" class="card" style="display:none;">
+
+    <img src="logo.png" class="logoLogin">
 
     <h2>Registro</h2>
 
@@ -63,11 +64,47 @@
 
 </div>
 
-<!-- MENU -->
-<div id="menu" class="simpleMenu" style="display:none">
-  <button class="bigBtn" onclick="ver('stats')">💰 Ganancias</button>
-  <button class="bigBtn" onclick="ver('panel')">👥 Vendedores</button>
-  <button class="logoutBtn" onclick="logout()">Salir</button>
+<!-- MENU CENTRADO -->
+<div id="menu" class="menu" style="display:none;">
+
+  <div class="menuCard">
+
+    <button class="bigBtn" onclick="ver('stats')">💰 Ganancias</button>
+
+    <button class="bigBtn" id="btnScan" onclick="ver('scan')">📸 Escanear Fichas</button>
+
+    <button class="bigBtn" id="btnPanel" onclick="ver('panel')">👥 Vendedores</button>
+
+    <button class="logoutBtn" onclick="logout()">🚪 Salir</button>
+
+  </div>
+
+</div>
+
+<!-- SCAN -->
+<div id="scan" style="display:none">
+
+  <div class="card">
+
+    <h2>📸 Scanner Fichas</h2>
+
+    <input type="file" id="img">
+
+    <select id="vendedorSelect"></select>
+
+    <select id="precio">
+      <option value="10">$10</option>
+      <option value="25">$25</option>
+    </select>
+
+    <button onclick="scan()">Escanear</button>
+
+    <textarea id="pins" placeholder="Fichas detectadas..."></textarea>
+
+    <button onclick="guardar()">Guardar Fichas</button>
+
+  </div>
+
 </div>
 
 <!-- STATS -->
@@ -90,7 +127,7 @@ window.onload=()=>{
 setTimeout(()=>{
 document.getElementById("splash").style.display="none";
 },2000);
-}
+};
 
 // FIREBASE
 firebase.initializeApp({
@@ -123,20 +160,28 @@ volverLogin();
 });
 }
 
-// CARGAR USUARIO
+// CARGAR
 function cargar(uid){
 db.collection("usuarios").doc(uid).get().then(doc=>{
 let d=doc.data();
 nombre=d.nombre;
 
-loginBox.style.display="none";
-menu.style.display="flex";
+document.getElementById("loginBox").style.display="none";
+document.getElementById("registroBox").style.display="none";
+document.getElementById("menu").style.display="flex";
+
+if(d.tipo==="vendedor"){
+document.getElementById("btnScan").style.display="none";
+document.getElementById("btnPanel").style.display="none";
+}
 });
 }
 
 // VISTAS
 function ver(v){
-["stats","panel"].forEach(x=>document.getElementById(x).style.display="none");
+["scan","stats","panel"].forEach(x=>{
+document.getElementById(x).style.display="none";
+});
 document.getElementById(v).style.display="block";
 }
 
@@ -180,6 +225,29 @@ ranking.appendChild(li);
 });
 }
 
+// SCAN
+function scan(){
+let f=img.files[0];
+Tesseract.recognize(f,'eng').then(r=>{
+pins.value=r.data.text;
+});
+}
+
+// GUARDAR
+function guardar(){
+let arr=pins.value.split("\n");
+arr.forEach(p=>{
+if(p.trim()!=""){
+db.collection("fichas").add({
+pin:p,
+vendedor:vendedorSelect.value,
+precio:parseInt(precio.value)
+});
+}
+});
+alert("Guardado");
+}
+
 // LOGOUT
 function logout(){
 auth.signOut();
@@ -189,10 +257,10 @@ location.reload();
 // UI
 function mostrarRegistro(){
 loginBox.style.display="none";
-registroBox.style.display="block";
+registroBox.style.display="flex";
 }
 function volverLogin(){
-loginBox.style.display="block";
+loginBox.style.display="flex";
 registroBox.style.display="none";
 }
 
