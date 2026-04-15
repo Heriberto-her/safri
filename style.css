@@ -1,18 +1,45 @@
 body{
-font-family:Arial;
-background:#0f172a;
-color:white;
 margin:0;
+font-family:Arial;
+color:white;
+background:linear-gradient(135deg,#4c1d95,#1e3a8a);
 }
 
-/* BIENVENIDA */
+/* SPLASH */
+.splash{
+position:fixed;
+width:100%;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#4c1d95,#1e3a8a);
+z-index:9999;
+}
+
+.logoBig{
+width:120px;
+border-radius:25px;
+margin-bottom:20px;
+}
+
+.loader{
+width:40px;
+height:40px;
+border:4px solid white;
+border-top:4px solid transparent;
+border-radius:50%;
+animation:spin 1s linear infinite;
+margin:auto;
+}
+
+/* LOGIN */
 .welcome{
 display:flex;
 flex-direction:column;
 justify-content:center;
 align-items:center;
 height:100vh;
-background:linear-gradient(135deg,#020617,#0f172a);
 }
 
 .logo{
@@ -21,29 +48,17 @@ border-radius:20px;
 margin-bottom:10px;
 }
 
-.logoBox{
-text-align:center;
-margin-bottom:20px;
-}
-
-/* TARJETAS */
-.container{
-padding:20px;
-max-width:900px;
-margin:auto;
-}
-
 .card{
-background:#1e293b;
+background:rgba(255,255,255,0.1);
+backdrop-filter:blur(10px);
 padding:20px;
-border-radius:12px;
-margin-bottom:20px;
+border-radius:15px;
+width:90%;
+max-width:350px;
 }
-
-.center{text-align:center}
 
 /* FORM */
-input,select,textarea{
+input,select{
 width:100%;
 padding:12px;
 margin-top:10px;
@@ -67,7 +82,7 @@ button.sec{
 background:#334155;
 }
 
-/* BOTONES GRANDES */
+/* MENU */
 .simpleMenu{
 display:flex;
 flex-direction:column;
@@ -80,9 +95,14 @@ font-size:20px;
 padding:20px;
 border-radius:15px;
 background:#22c55e;
-font-weight:bold;
 }
 
 .logoutBtn{
 background:#ef4444;
+}
+
+/* ANIMACIÓN */
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
 }
