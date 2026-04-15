@@ -6,6 +6,7 @@
 
 <title>SAFRI PRO 🔥</title>
 
+<link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -13,58 +14,70 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 
-<style>
-body{font-family:Arial;background:#0f172a;color:white;margin:0}
-header{background:#020617;padding:15px;text-align:center}
-.container{padding:20px;max-width:900px;margin:auto}
-.card{background:#1e293b;padding:20px;border-radius:12px;margin-bottom:20px}
-input,select,textarea{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:none}
-button{background:#22c55e;border:none;padding:10px;color:white;border-radius:8px;margin-top:10px}
-.menu{background:#020617;padding:10px;text-align:center}
-.menu button{margin:5px}
-</style>
 </head>
 
 <body>
 
-<header>SAFRI 🔥</header>
+<!-- BIENVENIDA -->
+<div class="welcome" id="loginBox">
 
-<div class="container" id="loginBox">
-<div class="card">
-<h2>Login</h2>
-<input id="email" placeholder="Correo">
-<input id="password" type="password" placeholder="Contraseña">
+<div class="logoBox">
+<img src="logo.png" class="logo">
+<h1>SAFRI</h1>
+<p>Internet rápido y confiable 🔥</p>
+</div>
+
+<div class="card loginCard">
+<h2>Bienvenido</h2>
+
+<input id="email" placeholder="Escribe tu correo">
+<input id="password" type="password" placeholder="Tu contraseña">
+
 <button onclick="login()">Entrar</button>
-<button onclick="mostrarRegistro()">Crear cuenta</button>
-</div>
+<button class="sec" onclick="mostrarRegistro()">Crear cuenta</button>
+
 </div>
 
+</div>
+
+<!-- REGISTRO -->
 <div class="container" id="registroBox" style="display:none">
 <div class="card">
-<h2>Registro</h2>
-<input id="nombre" placeholder="Nombre">
+<h2>Crear cuenta</h2>
+<input id="nombre" placeholder="Tu nombre">
 <input id="emailR" placeholder="Correo">
 <input id="passR" type="password" placeholder="Contraseña">
+
 <select id="tipoUser">
 <option value="vendedor">Vendedor</option>
 <option value="admin">Socio</option>
 </select>
+
 <button onclick="registrar()">Crear cuenta</button>
 <button onclick="volverLogin()">Volver</button>
 </div>
 </div>
 
-<div id="menu" class="menu" style="display:none">
-<button onclick="ver('dashboard')">Inicio</button>
-<button onclick="ver('scan')">Escanear</button>
-<button onclick="ver('stats')">Stats</button>
-<button onclick="logout()">Salir</button>
+<!-- MENU SIMPLE -->
+<div id="menu" class="simpleMenu" style="display:none">
+
+<button class="bigBtn" onclick="ver('scan')">📸 Escanear fichas</button>
+
+<button class="bigBtn" onclick="ver('stats')">💰 Ver ganancias</button>
+
+<button class="logoutBtn" onclick="logout()">🚪 Salir</button>
+
 </div>
 
+<!-- DASHBOARD -->
 <div class="container" id="dashboard" style="display:none">
-<div class="card"><h2>Bienvenido 🔥</h2></div>
+<div class="card center">
+<h2 id="saludo">Bienvenido</h2>
+<p>Selecciona una opción 👇</p>
+</div>
 </div>
 
+<!-- SCAN -->
 <div class="container" id="scan" style="display:none">
 <div class="card">
 <h2>Escanear fichas</h2>
@@ -82,25 +95,29 @@ button{background:#22c55e;border:none;padding:10px;color:white;border-radius:8px
 
 <textarea id="pins"></textarea>
 
-<button onclick="generarScript()">Generar Script</button>
+<button onclick="generarScript()">Generar Script MikroTik</button>
 <pre id="script"></pre>
 
 <button onclick="guardar()">Guardar fichas</button>
+
 </div>
 </div>
 
+<!-- STATS -->
 <div class="container" id="stats" style="display:none">
 <div class="card">
-<h2>Estadísticas (Corte día 20)</h2>
+<h2>Mis ganancias</h2>
 <pre id="statsContent"></pre>
 </div>
 </div>
 
 <script>
 
-// SERVICE WORKER
-if('serviceWorker' in navigator){
- navigator.serviceWorker.register('sw.js');
+// VOZ
+function hablar(texto){
+let msg = new SpeechSynthesisUtterance(texto);
+msg.lang = "es-MX";
+speechSynthesis.speak(msg);
 }
 
 // FIREBASE
@@ -115,25 +132,23 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let uidActual="";
-let tipoActual="";
 let usuarioNombre="";
+let tipoActual="";
 
 // LOGIN
-window.login = function(){
+function login(){
 let email = document.getElementById('email').value;
 let pass = document.getElementById('password').value;
 
 auth.signInWithEmailAndPassword(email, pass)
 .then(res=>{
- uidActual = res.user.uid;
- cargarDatos(uidActual);
+ cargarDatos(res.user.uid);
 })
 .catch(err=>alert(err.message));
 }
 
 // REGISTRO
-window.registrar = function(){
+function registrar(){
 let nombre = document.getElementById('nombre').value;
 let email = document.getElementById('emailR').value;
 let pass = document.getElementById('passR').value;
@@ -143,24 +158,28 @@ auth.createUserWithEmailAndPassword(email, pass)
 .then(res=>{
  db.collection("usuarios").doc(res.user.uid).set({
    nombre:nombre,
-   correo:email,
    tipo:tipo
  });
+
  alert("Cuenta creada 🔥");
  volverLogin();
-})
-.catch(err=>alert(err.message));
+});
 }
 
 // CARGAR USUARIO
 function cargarDatos(uid){
 db.collection("usuarios").doc(uid).get().then(doc=>{
  let data = doc.data();
- tipoActual = data.tipo;
+
  usuarioNombre = data.nombre;
+ tipoActual = data.tipo;
 
  document.getElementById('loginBox').style.display="none";
- document.getElementById('menu').style.display="block";
+ document.getElementById('menu').style.display="flex";
+
+ document.getElementById('saludo').textContent = "Hola " + usuarioNombre;
+
+ hablar("Hola " + usuarioNombre + ", bienvenido a Safri");
 
  cargarVendedores();
  ver('dashboard');
@@ -168,7 +187,7 @@ db.collection("usuarios").doc(uid).get().then(doc=>{
 }
 
 // NAVEGACIÓN
-window.ver = function(v){
+function ver(v){
 ["dashboard","scan","stats"].forEach(id=>{
  document.getElementById(id).style.display="none";
 });
@@ -182,6 +201,7 @@ function cargarVendedores(){
 db.collection("usuarios").where("tipo","==","vendedor").get().then(snap=>{
  let sel = document.getElementById('vendedorSelect');
  sel.innerHTML="";
+
  snap.forEach(doc=>{
   let v = doc.data();
   let op = document.createElement('option');
@@ -189,11 +209,12 @@ db.collection("usuarios").where("tipo","==","vendedor").get().then(snap=>{
   op.text = v.nombre;
   sel.appendChild(op);
  });
+
 });
 }
 
 // OCR
-window.scan = function(){
+function scan(){
 let file = document.getElementById('img').files[0];
 if(!file) return alert("Sube imagen");
 
@@ -203,14 +224,14 @@ Tesseract.recognize(file,'eng').then(({data:{text}})=>{
 }
 
 // SCRIPT
-window.generarScript = function(){
+function generarScript(){
 let pins = document.getElementById('pins').value.split('\n');
-let script = "";
+let script="";
 
 pins.forEach(p=>{
- p = p.trim();
+ p=p.trim();
  if(p!=""){
-  script += `/ip hotspot user add name=${p} password="" profile=default\n`;
+  script+=`/ip hotspot user add name=${p} password="" profile=default\n`;
  }
 });
 
@@ -218,13 +239,13 @@ document.getElementById('script').textContent = script;
 }
 
 // GUARDAR
-window.guardar = function(){
+function guardar(){
 let pins = document.getElementById('pins').value.split('\n');
 let vendedor = document.getElementById('vendedorSelect').value || usuarioNombre;
 let precio = parseInt(document.getElementById('precio').value);
 
 pins.forEach(p=>{
- p = p.trim();
+ p=p.trim();
  if(p!=""){
   db.collection("fichas").add({
    pin:p,
@@ -235,10 +256,11 @@ pins.forEach(p=>{
  }
 });
 
-alert("Fichas guardadas 🔥");
+hablar("Fichas guardadas correctamente");
+alert("Guardado 🔥");
 }
 
-// CORTE DÍA 20
+// STATS CON CORTE
 function cargarStats(){
 
 let hoy = new Date();
@@ -247,50 +269,42 @@ let fin = new Date(hoy.getFullYear(), hoy.getMonth()+1, 20);
 
 db.collection("fichas").get().then(snap=>{
 
- let data = {};
+ let total=0;
 
  snap.forEach(doc=>{
   let v = doc.data();
   let fecha = v.fecha.toDate();
 
-  if(fecha >= inicio && fecha < fin){
-
-   if(tipoActual==="vendedor" && v.vendedor !== usuarioNombre) return;
-
-   if(!data[v.vendedor]) data[v.vendedor]=0;
-   data[v.vendedor]+=v.precio;
+  if(fecha>=inicio && fecha<fin){
+   if(v.vendedor===usuarioNombre){
+    total+=v.precio;
+   }
   }
  });
 
- let txt="";
+ let ganancia = total * 0.15;
 
- for(let v in data){
-  let total = data[v];
-  let ganancia = total * 0.15;
-
-  txt += v + "\nTotal: $" + total + "\n15%: $" + ganancia.toFixed(2) + "\n\n";
- }
-
- document.getElementById('statsContent').textContent = txt;
+ document.getElementById('statsContent').textContent =
+ "Total vendido: $" + total +
+ "\nTu ganancia (15%): $" + ganancia.toFixed(2);
 
 });
-
 }
 
 // LOGOUT
-window.logout = function(){
+function logout(){
 auth.signOut();
 location.reload();
 }
 
 // VISTAS
-window.mostrarRegistro = function(){
+function mostrarRegistro(){
 document.getElementById('loginBox').style.display="none";
 document.getElementById('registroBox').style.display="block";
 }
 
-window.volverLogin = function(){
-document.getElementById('loginBox').style.display="block";
+function volverLogin(){
+document.getElementById('loginBox').style.display="flex";
 document.getElementById('registroBox').style.display="none";
 }
 
