@@ -3,8 +3,8 @@
   "short_name": "SAFRI",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#4c1d95",
-  "theme_color": "#4c1d95",
+  "background_color": "#0f172a",
+  "theme_color": "#22c55e",
   "icons": [
     {
       "src": "logo.png",
@@ -12,4 +12,5 @@
       "type": "image/png"
     }
   ]
+}
 }
