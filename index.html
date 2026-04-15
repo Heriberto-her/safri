@@ -61,10 +61,16 @@
 </div>
 </div>
 
-<!-- MENU -->
 <div id="menu" class="simpleMenu" style="display:none">
+
+<!-- SOCIO -->
+<button class="bigBtn" id="btnScan" onclick="ver('scan')">📸 Escanear fichas</button>
+
+<!-- TODOS -->
 <button class="bigBtn" onclick="ver('stats')">💰 Ver ganancias</button>
-<button class="logoutBtn" onclick="logout()">Salir</button>
+
+<button class="logoutBtn" onclick="logout()">🚪 Salir</button>
+
 </div>
 
 <!-- STATS -->
@@ -151,11 +157,16 @@ db.collection("usuarios").doc(uid).get().then(doc=>{
 
  document.getElementById('loginBox').style.display="none";
  document.getElementById('menu').style.display="flex";
+  if(tipoActual === "vendedor"){
+ document.getElementById("btnScan").style.display = "none";
+}
 
  hablar("Hola " + usuarioNombre);
 
- ver('stats');
-});
+if(tipoActual === "admin"){
+ ver('dashboard'); // SOCIO
+}else{
+ ver('stats'); // VENDEDOR
 }
 
 // STATS
@@ -203,6 +214,18 @@ document.getElementById('registroBox').style.display="none";
 }
 
 </script>
+<div class="container" id="scan" style="display:none">
+<div class="card">
+<h2>Escanear fichas</h2>
 
+<input type="file" id="img">
+
+<textarea id="pins"></textarea>
+
+<button onclick="scan()">Escanear</button>
+<button onclick="guardar()">Guardar</button>
+
+</div>
+</div>
 </body>
 </html>
